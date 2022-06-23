@@ -1,129 +1,44 @@
 import { of } from 'rxjs'
 import { assign, createMachine } from 'xstate'
 
+import {
+  AllowanceInfo,
+  BorrowPositionMachineContext,
+  BorrowPositionMachineEvent,
+  PositionInfo,
+  ProxyInfo,
+} from './types'
+
+// Todo: Drop state-machine into UI
 // Todo: Put Proxy logic in separate state machine
 // Todo: Put Allowance logic in separate state machine
-// Todo:
+// Todo: Allow machine to accept adapter
+// Todo: Plumb in real pipes
 
-export interface BorrowPositionMachineContext {
-  depositAmount?: number
-  depositAmountUSD?: number
-  generateAmount?: number
-  generateOn?: boolean
-  proxy?: string
-  allowanceAmount?: number
-  allowanceHash?: string
-  positionHash?: string
-  errorMessage?: string
-}
-
-interface ProxyInfo {
-  address: string
-}
-
-interface AllowanceAmountInfo {
-  amount: number
-}
-
-interface AllowanceInfo {
-  hash: string
-}
-
-interface DepositInfo {
-  amount: number
-}
-
-interface DepositUSDInfo {
-  amount: number
-}
-
-interface GenerateInfo {
-  amount: number
-}
-
-interface ToggleGenerateInfo {
-  generateOn: boolean
-}
-
-interface PositionInfo {
-  hash: string
-}
-
-export type BorrowPositionMachineEvent =
-  | {
-      type: 'BACK'
-    }
-  | {
-      type: 'EDITING'
-    }
-  | {
-      type: 'UPDATE_DEPOSIT'
-      info: DepositInfo
-    }
-  | {
-      type: 'UPDATE_DEPOSIT_USD'
-      info: DepositUSDInfo
-    }
-  | {
-      type: 'UPDATE_DEPOSIT_MAX'
-      info: DepositInfo
-    }
-  | {
-      type: 'UPDATE_GENERATE'
-      info: GenerateInfo
-    }
-  | {
-      type: 'UPDATE_GENERATE_MAX'
-      info: GenerateInfo
-    }
-  | {
-      type: 'TOGGLE_GENERATE'
-      info: ToggleGenerateInfo
-    }
-  | {
-      type: 'POSITION_CONFIGURED'
-    }
-  | {
-      type: 'CREATE_PROXY'
-    }
-  | {
-      type: 'PROXY_CREATED'
-      info: ProxyInfo
-    }
-  | {
-      type: 'SET_ALLOWANCE_AMOUNT'
-      info: AllowanceAmountInfo
-    }
-  | {
-      type: 'SET_ALLOWANCE'
-    }
-  | {
-      type: 'ALLOWANCE_SET'
-      info: AllowanceInfo
-    }
-  | {
-      type: 'CONFIRM'
-    }
-  | {
-      type: 'POSITION_CREATED'
-      info: PositionInfo
-    }
-
-const borrowPositionStateMachine = createMachine<
-  BorrowPositionMachineContext,
-  BorrowPositionMachineEvent
->(
+const borrowPositionStateMachine = createMachine(
   {
+    schema: {
+      context: {} as BorrowPositionMachineContext,
+      events: {} as BorrowPositionMachineEvent,
+      services: {} as {
+        proxyService: { data: { type: 'PROXY_CREATED'; info: ProxyInfo } }
+        allowanceService: { data: { type: 'ALLOWANCE_SET'; info: AllowanceInfo } }
+        openPosition: { data: { type: 'POSITION_CREATED'; info: PositionInfo } }
+      },
+    },
+    tsTypes: {} as import('./index.typegen').Typegen0,
     id: 'BorrowPosition',
     initial: 'editing',
     context: {
-      allowanceAmount: 0,
+      allowanceAmount: undefined,
       allowanceHash: undefined,
       proxy: undefined,
       errorMessage: undefined,
+      id: undefined,
     },
     states: {
       editing: {
+        id: 'editing',
         initial: 'idle',
         onDone: [
           { target: 'createProxy', cond: 'proxyNotCreated' },
@@ -151,6 +66,7 @@ const borrowPositionStateMachine = createMachine<
         },
       },
       createProxy: {
+        id: 'createProxy',
         onDone: [{ target: 'setAllowance', cond: 'allowanceNotSet' }, { target: 'confirm' }],
         initial: 'idle',
         states: {
@@ -161,27 +77,27 @@ const borrowPositionStateMachine = createMachine<
                 target: 'submitting',
               },
               BACK: {
-                target: 'editing',
+                target: '#editing',
               },
             },
           },
           submitting: {
             invoke: {
-              src: 'createProxy',
-              onDone: {
-                target: 'complete',
-                actions: 'assignProxyToContext',
+              src: 'proxyService',
+              onError: {
+                target: 'idle',
+                actions: 'assignErrorMessageToContext',
               },
-              // onError: {
-              //   target: 'idle',
-              //   actions: 'assignErrorMessageToContext',
-              // },
+            },
+            on: {
+              PROXY_CREATED: { actions: 'assignProxyToContext', target: 'complete' },
             },
           },
           complete: { type: 'final' },
         },
       },
       setAllowance: {
+        id: 'setAllowance',
         onDone: {
           target: 'confirm',
         },
@@ -191,26 +107,26 @@ const borrowPositionStateMachine = createMachine<
             exit: ['clearErrorMessage'],
             on: {
               SET_ALLOWANCE: 'submitting',
-              BACK: [{ target: 'createProxy', cond: 'proxyNotCreated' }, { target: 'confirm' }],
+              BACK: [{ target: '#createProxy', cond: 'proxyNotCreated' }, { target: '#editing' }],
             },
           },
           submitting: {
             invoke: {
-              src: 'setAllowance',
-              onDone: {
-                target: 'complete',
-                actions: 'assignAllowanceHashToContext',
+              src: 'allowanceService',
+              onError: {
+                target: 'idle',
+                actions: 'assignErrorMessageToContext',
               },
-              // onError: {
-              //   target: 'idle',
-              //   actions: 'assignErrorMessageToContext',
-              // },
+            },
+            on: {
+              ALLOWANCE_SET: { actions: 'assignAllowanceHashToContext', target: 'complete' },
             },
           },
           complete: { type: 'final' },
         },
       },
       confirm: {
+        id: 'confirm',
         onDone: {
           target: 'success',
         },
@@ -221,41 +137,38 @@ const borrowPositionStateMachine = createMachine<
             on: {
               CONFIRM: 'submitting',
               BACK: [
-                { target: 'setAllowance', cond: 'allowanceNotSet' },
-                { target: 'createProxy', cond: 'proxyNotCreated' },
-                { target: 'editing' },
+                { target: '#setAllowance', cond: 'allowanceNotSet' },
+                { target: '#createProxy', cond: 'proxyNotCreated' },
+                { target: '#editing' },
               ],
             },
           },
           submitting: {
             invoke: {
               src: 'openPosition',
-              onDone: {
-                target: 'complete',
-                actions: 'assign',
+              onError: {
+                target: 'idle',
+                actions: 'assignErrorMessageToContext',
               },
-              // onError: {
-              //   target: 'idle',
-              //   actions: 'assignErrorMessageToContext',
-              // },
+            },
+            on: {
+              POSITION_CREATED: { actions: 'assignPositionHashToContext', target: 'complete' },
             },
           },
           complete: { type: 'final' },
         },
       },
       success: {
+        id: 'success',
         type: 'final',
       },
     },
   },
   {
     services: {
-      createProxy: (context, event) =>
-        of({ type: 'PROXY_CREATED', value: { address: `0xProxyAddress` } }),
-      setAllowance: (context, event) =>
-        of({ type: 'ALLOWANCE_SET', value: { hash: `0xAllowanceSuccess` } }),
-      openPosition: (context, event) =>
-        of({ type: 'POSITION_CREATED', value: { hash: `0xPositionCreated` } }),
+      proxyService: () => of({ type: 'PROXY_CREATED', info: { proxyAddress: `0xProxyAddress` } }),
+      allowanceService: () => of({ type: 'ALLOWANCE_SET', info: { txHash: `0xAllowanceSuccess` } }),
+      openPosition: () => of({ type: 'POSITION_CREATED', info: { txHash: `0xPositionCreated` } }),
     },
     guards: {
       allowanceNotSet: (context) => {
@@ -269,19 +182,19 @@ const borrowPositionStateMachine = createMachine<
       assignProxyToContext: assign((context, event) => {
         if (event.type !== 'PROXY_CREATED') return {}
         return {
-          proxy: event.info.address,
+          proxy: event.info.proxyAddress,
         }
       }),
       assignAllowanceHashToContext: assign((context, event) => {
         if (event.type !== 'ALLOWANCE_SET') return {}
         return {
-          proxy: event.info.hash,
+          allowanceHash: event.info.txHash,
         }
       }),
       assignPositionHashToContext: assign((context, event) => {
         if (event.type !== 'POSITION_CREATED') return {}
         return {
-          positionHash: event.info.hash,
+          positionHash: event.info.txHash,
         }
       }),
       assignDepositToContext: assign((context, event) => {
@@ -290,7 +203,6 @@ const borrowPositionStateMachine = createMachine<
           depositAmount: event.info.amount,
         }
       }),
-
       assignDepositUSDToContext: assign((context, event) => {
         if (event.type !== 'UPDATE_DEPOSIT_USD') return {}
         return {
@@ -309,8 +221,13 @@ const borrowPositionStateMachine = createMachine<
           generateOn: event.info.generateOn,
         }
       }),
-      clearErrorMessage: assign((context, event) => {
+      clearErrorMessage: assign(() => {
         return { errorMessage: undefined }
+      }) as any,
+      assignErrorMessageToContext: assign((context, event: any) => {
+        return {
+          errorMessage: event.data?.message || 'An unknown error occurred',
+        }
       }),
     },
   },

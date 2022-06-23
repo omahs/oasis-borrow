@@ -103,7 +103,7 @@ export type OpenVaultStage =
   | 'txSuccess'
 
 export interface MutableOpenVaultState {
-  stage: OpenVaultStage
+  // stage: OpenVaultStage
   depositAmount?: BigNumber
   depositAmountUSD?: BigNumber
   generateAmount?: BigNumber
@@ -132,14 +132,14 @@ interface OpenVaultFunctions {
   injectStateOverride: (state: Partial<MutableOpenVaultState>) => void
 }
 
-interface OpenVaultEnvironment {
+export interface OpenVaultEnvironment {
   ilk: string
   account: string
   token: string
   priceInfo: PriceInfo
   balanceInfo: BalanceInfo
   ilkData: IlkData
-  proxyAddress?: string
+  // proxyAddress?: string
   allowance?: BigNumber
 }
 

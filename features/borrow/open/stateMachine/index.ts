@@ -1,6 +1,10 @@
 import { of } from 'rxjs'
 import { assign, createMachine } from 'xstate'
 
+// Todo: Put Proxy logic in separate state machine
+// Todo: Put Allowance logic in separate state machine
+// Todo:
+
 export interface BorrowPositionMachineContext {
   depositAmount?: number
   depositAmountUSD?: number

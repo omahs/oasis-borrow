@@ -571,7 +571,20 @@ export function createProductCardsData$(
       combineLatest(
         ...ilkDataList.map((ilk) => {
           const tokenMeta = getToken(ilk.token)
-
+          return of({
+            token: ilk.token,
+            ilk: ilk.ilk as Ilk,
+            liquidationRatio: ilk.liquidationRatio,
+            liquidityAvailable: ilk.ilkDebtAvailable,
+            stabilityFee: ilk.stabilityFee,
+            debtFloor: ilk.debtFloor,
+            currentCollateralPrice: new BigNumber(1),
+            bannerIcon: tokenMeta.bannerIcon,
+            bannerGif: tokenMeta.bannerGif,
+            background: tokenMeta.background,
+            name: tokenMeta.name,
+            isFull: ilk.ilkDebtAvailable.lt(ilk.debtFloor),
+          })
           return priceInfo$(ilk.token).pipe(
             // tap(() => console.log('priceInfo$')),
             switchMap((priceInfo) => {
@@ -582,7 +595,7 @@ export function createProductCardsData$(
                 liquidityAvailable: ilk.ilkDebtAvailable,
                 stabilityFee: ilk.stabilityFee,
                 debtFloor: ilk.debtFloor,
-                currentCollateralPrice: priceInfo.currentCollateralPrice,
+                currentCollateralPrice: priceInfo.currentCollateralPrice, // not calling this any more
                 bannerIcon: tokenMeta.bannerIcon,
                 bannerGif: tokenMeta.bannerGif,
                 background: tokenMeta.background,

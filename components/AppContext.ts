@@ -177,6 +177,7 @@ import { spotIlk } from '../blockchain/calls/spot'
 import { getCollateralLocked$, getTotalValueLocked$ } from '../blockchain/collateral'
 import { charterIlks, cropJoinIlks, networksById } from '../blockchain/config'
 import {
+  Context,
   ContextConnected,
   createAccount$,
   createContext$,
@@ -502,10 +503,11 @@ export function setupAppContext() {
   const cropperCrops$ = observe(onceOnPageLoad$, context$, cropperCrops)
   const cropperBonusTokenAddress$ = observe(onceOnPageLoad$, context$, cropperBonusTokenAddress)
 
-  const pipZzz$ = observe(onEveryBlock$, context$, pipZzz)
-  const pipHop$ = observe(onEveryBlock$, context$, pipHop)
-  const pipPeek$ = observe(onEveryBlock$, oracleContext$, pipPeek)
-  const pipPeep$ = observe(onEveryBlock$, oracleContext$, pipPeep)
+  // don't provide new values when it's not needed.
+  const pipZzz$ = observe(onceOnPageLoad$, context$, pipZzz)
+  const pipHop$ = observe(onceOnPageLoad$, context$, pipHop)
+  const pipPeek$ = observe(onceOnPageLoad$, oracleContext$, pipPeek)
+  const pipPeep$ = observe(onceOnPageLoad$, oracleContext$, pipPeep)
 
   const unclaimedCrvLdoRewardsForIlk$ = observe(onceOnPageLoad$, context$, crvLdoRewardsEarned)
 
@@ -865,7 +867,17 @@ export function setupAppContext() {
 
   const collateralPrices$ = createCollateralPrices$(collateralTokens$, oraclePriceData$)
 
-  const productCardsData$ = createProductCardsData$(ilkDataList$, priceInfo$)
+  const littleIlks$ = ilks$.pipe(
+    map(
+      (ilks) =>
+        ilks.filter((ilk) => ['ETH-C', 'WBTC-C', 'WSTETH-B', 'CRVV1ETHSTETH-A'].includes(ilk)), // featured ilks on borrow page
+    ),
+  )
+
+  const littleIlkDataList$ = createIlkDataList$(ilkData$, littleIlks$)
+
+  const productCardsData$ = createProductCardsData$(littleIlkDataList$, priceInfo$)
+  // const productCardsData$ = createProductCardsData$(ilkDataList$, priceInfo$)
   const productCardsWithBalance$ = createProductCardsWithBalance$(ilksWithBalance$, priceInfo$)
 
   const automationTriggersData$ = memoize(

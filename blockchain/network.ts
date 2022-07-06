@@ -93,11 +93,11 @@ export function compareBigNumber(a1: BigNumber, a2: BigNumber): boolean {
 export function createOnEveryBlock$(
   web3Context$: Observable<Web3ContextConnected | Web3ContextConnectedReadonly>,
 ): [Observable<number>, EveryBlockFunction$] {
-  const onEveryBlock$ = combineLatest(web3Context$, every10Seconds$).pipe(
+  const onEveryBlock$ = combineLatest(web3Context$, every5Seconds$).pipe(
     switchMap(([{ web3 }]) => bindNodeCallback(web3.eth.getBlockNumber)()),
     catchError((error, source) => {
       console.log(error)
-      return concat(every10Seconds$.pipe(skip(1), first()), source)
+      return concat(every5Seconds$.pipe(skip(1), first()), source)
     }),
     distinctUntilChanged(),
     shareReplay(1),

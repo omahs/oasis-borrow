@@ -2,7 +2,7 @@ import { BigNumber } from 'bignumber.js'
 import { IlkWithBalance } from 'features/ilks/ilksWithBalances'
 import _, { keyBy, sortBy } from 'lodash'
 import { combineLatest, Observable, of } from 'rxjs'
-import { startWith, switchMap } from 'rxjs/operators'
+import { startWith, switchMap, tap } from 'rxjs/operators'
 
 import { supportedIlks } from '../blockchain/config'
 import { IlkDataList } from '../blockchain/ilks'
@@ -566,12 +566,14 @@ export function createProductCardsData$(
   priceInfo$: (token: string) => Observable<PriceInfo>,
 ): Observable<ProductCardData[]> {
   return ilkDataList$.pipe(
+    // tap(() => console.log('ilkDataList$ pre')),
     switchMap((ilkDataList) =>
       combineLatest(
         ...ilkDataList.map((ilk) => {
           const tokenMeta = getToken(ilk.token)
 
           return priceInfo$(ilk.token).pipe(
+            // tap(() => console.log('priceInfo$')),
             switchMap((priceInfo) => {
               return of({
                 token: ilk.token,
@@ -592,5 +594,6 @@ export function createProductCardsData$(
         }),
       ),
     ),
+    // tap(() => console.log('ilkDataList$')),
   )
 }

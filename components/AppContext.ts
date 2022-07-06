@@ -469,42 +469,47 @@ export function setupAppContext() {
     return doGasEstimation(gasPrice$, daiEthTokenPrice$, txHelpers$, state, call)
   }
 
+  const onceOnPageLoad$ = of(1)
+  const serviceBus$ = of(1)
+  const inConfig$ = of(1)
+  const unsure$ = onEveryBlock$
   // base
-  const proxyAddress$ = memoize(curry(createProxyAddress$)(onEveryBlock$, context$))
-  const proxyOwner$ = memoize(curry(createProxyOwner$)(onEveryBlock$, context$))
-  const cdpManagerUrns$ = observe(onEveryBlock$, context$, cdpManagerUrns, bigNumberTostring)
-  const cdpManagerIlks$ = observe(onEveryBlock$, context$, cdpManagerIlks, bigNumberTostring)
-  const cdpManagerOwner$ = observe(onEveryBlock$, context$, cdpManagerOwner, bigNumberTostring)
-  const cdpRegistryOwns$ = observe(onEveryBlock$, context$, cdpRegistryOwns)
-  const cdpRegistryCdps$ = observe(onEveryBlock$, context$, cdpRegistryCdps)
+  const proxyAddress$ = memoize(curry(createProxyAddress$)(onceOnPageLoad$, context$))
+  const proxyOwner$ = memoize(curry(createProxyOwner$)(onceOnPageLoad$, context$))
+  const cdpManagerUrns$ = observe(onceOnPageLoad$, context$, cdpManagerUrns, bigNumberTostring)
+  const cdpManagerIlks$ = observe(onceOnPageLoad$, context$, cdpManagerIlks, bigNumberTostring)
+  const cdpManagerOwner$ = observe(onceOnPageLoad$, context$, cdpManagerOwner, bigNumberTostring)
+  const cdpRegistryOwns$ = observe(onceOnPageLoad$, context$, cdpRegistryOwns)
+  const cdpRegistryCdps$ = observe(onceOnPageLoad$, context$, cdpRegistryCdps)
   const vatIlks$ = observe(onEveryBlock$, context$, vatIlk)
-  const vatUrns$ = observe(onEveryBlock$, context$, vatUrns, ilkUrnAddressToString)
-  const vatGem$ = observe(onEveryBlock$, context$, vatGem, ilkUrnAddressToString)
-  const spotIlks$ = observe(onEveryBlock$, context$, spotIlk)
+  const vatUrns$ = observe(onceOnPageLoad$, context$, vatUrns, ilkUrnAddressToString)
+  const vatGem$ = observe(serviceBus$, context$, vatGem, ilkUrnAddressToString)
+
+  const spotIlks$ = observe(onceOnPageLoad$, context$, spotIlk)
   const jugIlks$ = observe(onEveryBlock$, context$, jugIlk)
-  const dogIlks$ = observe(onEveryBlock$, context$, dogIlk)
+  const dogIlks$ = observe(onceOnPageLoad$, context$, dogIlk)
 
-  const charterNib$ = observe(onEveryBlock$, context$, charterNib)
-  const charterPeace$ = observe(onEveryBlock$, context$, charterPeace)
-  const charterUline$ = observe(onEveryBlock$, context$, charterUline)
-  const charterUrnProxy$ = observe(onEveryBlock$, context$, charterUrnProxy)
+  const charterNib$ = observe(onceOnPageLoad$, context$, charterNib)
+  const charterPeace$ = observe(onceOnPageLoad$, context$, charterPeace)
+  const charterUline$ = observe(onceOnPageLoad$, context$, charterUline)
+  const charterUrnProxy$ = observe(onceOnPageLoad$, context$, charterUrnProxy)
 
-  const cropperUrnProxy$ = observe(onEveryBlock$, context$, cropperUrnProxy)
-  const cropperStake$ = observe(onEveryBlock$, context$, cropperStake)
-  const cropperShare$ = observe(onEveryBlock$, context$, cropperShare)
-  const cropperStock$ = observe(onEveryBlock$, context$, cropperStock)
-  const cropperTotal$ = observe(onEveryBlock$, context$, cropperStock)
-  const cropperCrops$ = observe(onEveryBlock$, context$, cropperCrops)
-  const cropperBonusTokenAddress$ = observe(onEveryBlock$, context$, cropperBonusTokenAddress)
+  const cropperUrnProxy$ = observe(onceOnPageLoad$, context$, cropperUrnProxy)
+  const cropperStake$ = observe(onceOnPageLoad$, context$, cropperStake)
+  const cropperShare$ = observe(onceOnPageLoad$, context$, cropperShare)
+  const cropperStock$ = observe(onceOnPageLoad$, context$, cropperStock)
+  const cropperTotal$ = observe(onceOnPageLoad$, context$, cropperStock)
+  const cropperCrops$ = observe(onceOnPageLoad$, context$, cropperCrops)
+  const cropperBonusTokenAddress$ = observe(onceOnPageLoad$, context$, cropperBonusTokenAddress)
 
   const pipZzz$ = observe(onEveryBlock$, context$, pipZzz)
   const pipHop$ = observe(onEveryBlock$, context$, pipHop)
   const pipPeek$ = observe(onEveryBlock$, oracleContext$, pipPeek)
   const pipPeep$ = observe(onEveryBlock$, oracleContext$, pipPeep)
 
-  const unclaimedCrvLdoRewardsForIlk$ = observe(onEveryBlock$, context$, crvLdoRewardsEarned)
+  const unclaimedCrvLdoRewardsForIlk$ = observe(onceOnPageLoad$, context$, crvLdoRewardsEarned)
 
-  const getCdps$ = observe(onEveryBlock$, context$, getCdps)
+  const getCdps$ = observe(serviceBus$, context$, getCdps)
 
   const charter = {
     nib$: (args: { ilk: string; usr: string }) => charterNib$(args),
@@ -525,13 +530,13 @@ export function setupAppContext() {
 
   const tokenAllowance$ = observe(onEveryBlock$, context$, tokenAllowance)
   const tokenBalanceRawForJoin$ = observe(onEveryBlock$, context$, tokenBalanceRawForJoin)
-  const tokenDecimals$ = observe(onEveryBlock$, context$, tokenDecimals)
-  const tokenSymbol$ = observe(onEveryBlock$, context$, tokenSymbol)
-  const tokenName$ = observe(onEveryBlock$, context$, tokenName)
+  const tokenDecimals$ = observe(inConfig$, context$, tokenDecimals)
+  const tokenSymbol$ = observe(inConfig$, context$, tokenSymbol)
+  const tokenName$ = observe(inConfig$, context$, tokenName)
 
-  const allowance$ = curry(createAllowance$)(context$, tokenAllowance$)
+  const allowance$ = memoize(curry(createAllowance$)(context$, tokenAllowance$))
 
-  const ilkToToken$ = curry(createIlkToToken$)(context$)
+  const ilkToToken$ = memoize(curry(createIlkToToken$)(context$))
 
   const ilkData$ = memoize(
     curry(createIlkData$)(vatIlks$, spotIlks$, jugIlks$, dogIlks$, ilkToToken$),
@@ -539,7 +544,7 @@ export function setupAppContext() {
 
   const charterCdps$ = memoize(
     curry(createGetRegistryCdps$)(
-      onEveryBlock$,
+      onceOnPageLoad$,
       context$,
       cdpRegistryCdps$,
       proxyAddress$,
@@ -729,7 +734,7 @@ export function setupAppContext() {
   )
 
   const token1Balance$ = observe(onEveryBlock$, context$, getToken1Balance)
-  const getGuniMintAmount$ = observe(onEveryBlock$, context$, getGuniMintAmount)
+  const getGuniMintAmount$ = observe(unsure$, context$, getGuniMintAmount)
 
   const manageVault$ = memoize(
     (id: BigNumber) =>
@@ -799,7 +804,7 @@ export function setupAppContext() {
 
   const getGuniPoolBalances$ = observe(onEveryBlock$, context$, getUnderlyingBalances)
 
-  const getTotalSupply$ = observe(onEveryBlock$, context$, getTotalSupply)
+  const getTotalSupply$ = observe(unsure$, context$, getTotalSupply)
 
   function getProportions$(gUniBalance: BigNumber, token: string) {
     return combineLatest(getGuniPoolBalances$({ token }), getTotalSupply$({ token })).pipe(

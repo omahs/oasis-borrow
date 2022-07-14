@@ -10,7 +10,7 @@ import { useObservable } from 'helpers/observableHook'
 import { staticFilesRuntimeUrl } from 'helpers/staticPaths'
 import { useRedirect } from 'helpers/useRedirect'
 import { Trans, useTranslation } from 'next-i18next'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Button, Flex, Image, Text } from 'theme-ui'
 
 import { useModal } from '../../helpers/modalHook'
@@ -28,7 +28,8 @@ export function ReferralLandingSummary() {
   const { context$, userReferral$ } = useAppContext()
 
   const [context, contextError] = useObservable(context$)
-  const [userReferral, userReferralError] = useObservable(userReferral$)
+  const _userReferral$ = useMemo(() => userReferral$(), [])
+  const [userReferral, userReferralError] = useObservable(_userReferral$)
 
   return (
     <WithErrorHandler error={[contextError, userReferralError]}>

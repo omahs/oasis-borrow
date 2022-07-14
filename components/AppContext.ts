@@ -915,14 +915,16 @@ export function setupAppContext() {
     saveAcceptanceFromApi$,
   )
 
-  const userReferral$ = createUserReferral$(
-    web3Context$,
-    txHelpers$,
-    getUserFromApi$,
-    getReferralsFromApi$,
-    getWeeklyClaimsFromApi$,
-    checkReferralLocalStorage$,
-  )
+  function userReferral$() {
+    return createUserReferral$(
+      web3Context$,
+      txHelpers$,
+      getUserFromApi$,
+      getReferralsFromApi$,
+      getWeeklyClaimsFromApi$,
+      checkReferralLocalStorage$,
+    )
+  }
 
   const checkReferralLocal$ = checkReferralLocalStorage$()
 

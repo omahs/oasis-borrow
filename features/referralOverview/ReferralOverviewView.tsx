@@ -4,10 +4,10 @@ import { getAddress } from 'ethers/lib/utils'
 import { WithLoadingIndicator } from 'helpers/AppSpinner'
 import { WithErrorHandler } from 'helpers/errorHandlers/WithErrorHandler'
 import { useObservable } from 'helpers/observableHook'
-import React from 'react'
+import React, { useMemo } from 'react'
 
 import { FeesView } from './FeesView'
-import { ReferralLandingSummary } from './ReferralLanding'
+import { ReferralLanding } from './ReferralLanding'
 import { ReferralLayout } from './ReferralLayout'
 import { ReferralsView } from './ReferralsView'
 import { UserReferralState } from './user'
@@ -23,7 +23,8 @@ export function ReferralsSummary({ address }: { address: string }) {
 
   const checksumAddress = getAddress(address.toLocaleLowerCase())
   const [context, contextError] = useObservable(context$)
-  const [userReferral, userReferralError] = useObservable(userReferral$)
+  const _userReferral$ = useMemo(() => userReferral$(), [address])
+  const [userReferral, userReferralError] = useObservable(_userReferral$)
 
   return (
     <WithErrorHandler error={[contextError, userReferralError]}>
@@ -55,8 +56,10 @@ export function ReferralOverviewView({ context, userReferral, address }: Props) 
           </>
         </ReferralLayout>
       )}
-      {isConnected && connectedAccount !== address && <ReferralLandingSummary />}
-      {!isConnected && <ReferralLandingSummary />}
+      {isConnected && connectedAccount !== address && (
+        <ReferralLanding context={context} userReferral={userReferral} />
+      )}
+      {!isConnected && <ReferralLanding context={context} userReferral={userReferral} />}
     </>
   )
 }

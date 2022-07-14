@@ -10,7 +10,7 @@ import {
 import { TxMetaKind } from 'blockchain/calls/txMeta'
 import { Context } from 'blockchain/network'
 import { AddGasEstimationFunction, TxHelpers } from 'components/AppContext'
-import { getQuote$, getTokenMetaData } from 'features/exchange/exchange'
+import { ExchangeAction, getQuote$, getTokenMetaData } from 'features/exchange/exchange'
 import { transactionToX } from 'helpers/form'
 import { OAZO_FEE, SLIPPAGE } from 'helpers/multiply/calculations'
 import { one, zero } from 'helpers/zero'
@@ -253,7 +253,7 @@ export function adjustPosition(
   txHelpers$
     .pipe(
       first(),
-      switchMap(({ sendWithGasEstimation }) =>
+      switchMap(({ sendWithGasEstimation, send }) =>
         getQuote$(
           getTokenMetaData('DAI', tokensMainnet),
           getTokenMetaData(token, tokensMainnet),
@@ -263,8 +263,31 @@ export function adjustPosition(
           exchangeAction!,
         ).pipe(
           first(),
-          switchMap((swap) =>
-            sendWithGasEstimation(adjustMultiplyVault, {
+          switchMap((swap) => {
+            log(
+              {
+                kind: TxMetaKind.adjustPosition,
+                depositCollateral: depositAmount || zero,
+                depositDai: depositDaiAmount || zero,
+                withdrawCollateral: withdrawAmount || zero,
+                withdrawDai: generateAmount || zero,
+                requiredDebt: debtDelta?.abs() || zero,
+                borrowedCollateral: collateralDelta?.abs() || zero,
+                slippage,
+                userAddress: account!,
+                proxyAddress: proxyAddress!,
+                exchangeAddress: swap?.status === 'SUCCESS' ? swap.tx.to : '',
+                exchangeData: swap?.status === 'SUCCESS' ? swap.tx.data : '',
+                action: exchangeAction!,
+                token,
+                id,
+                ilk,
+              },
+              'adjustPosition',
+            )
+            // @ts-ignore
+            document.txnSent = true
+            return send(adjustMultiplyVault, {
               kind: TxMetaKind.adjustPosition,
               depositCollateral: depositAmount || zero,
               depositDai: depositDaiAmount || zero,
@@ -301,8 +324,8 @@ export function adjustPosition(
                 },
                 () => of({ kind: 'manageSuccess' }),
               ),
-            ),
-          ),
+            )
+          }),
         ),
       ),
       startWith({ kind: 'manageWaitingForApproval' } as ManageMultiplyVaultChange),
@@ -622,11 +645,75 @@ export function closeVault(
     .subscribe((ch) => change(ch))
 }
 
+// @ts-ignore
+if (process.browser) document.txnSent = false
+
+function log(
+  args: {
+    kind: TxMetaKind
+    depositCollateral: BigNumber
+    depositDai: BigNumber
+    withdrawCollateral: BigNumber
+    withdrawDai: BigNumber
+    requiredDebt: BigNumber
+    borrowedCollateral: BigNumber
+    slippage: BigNumber
+    userAddress: string
+    proxyAddress: string
+    exchangeAddress: string
+    exchangeData: string
+    action: ExchangeAction | undefined
+    token: string
+    id: BigNumber
+    ilk: string
+  },
+  place: string,
+) {
+  console.log(`
+  place ${place}
+  depositCollateral ${args.depositCollateral}
+  depositDai ${args.depositDai}
+  withdrawCollateral ${args.withdrawCollateral}
+  withdrawDai ${args.withdrawDai}
+  requiredDebt ${args.requiredDebt}
+  borrowedCollateral ${args.borrowedCollateral}
+  slippage ${args.slippage}
+  userAddress ${args.userAddress}
+  proxyAddress ${args.proxyAddress}
+  exchangeAddress ${args.exchangeAddress}
+  exchangeData ${args.exchangeData}
+  action ${args.action}
+  token ${args.token}
+  id ${args.id}
+  ilk ${args.ilk}
+  txnSent ${
+    // @ts-ignore
+    document.txnSent
+  }
+  collateral * debt = ${args.requiredDebt.times(args.borrowedCollateral)}
+  `)
+  // console.log(`depositCollateral ${args.depositCollateral}`)
+  // console.log(`depositDai ${args.depositDai}`)
+  // console.log(`withdrawCollateral ${args.withdrawCollateral}`)
+  // console.log(`withdrawDai ${args.withdrawDai}`)
+  // console.log(`requiredDebt ${args.requiredDebt}`)
+  // console.log(`borrowedCollateral ${args.borrowedCollateral}`)
+  // console.log(`slippage ${args.slippage}`)
+  // console.log(`userAddress ${args.userAddress}`)
+  // console.log(`proxyAddress ${args.proxyAddress}`)
+  // console.log(`exchangeAddress ${args.exchangeAddress}`)
+  // // console.log(`exchangeData ${args.exchangeData}`)
+  // console.log(`action ${args.action}`)
+  // console.log(`token ${args.token}`)
+  // console.log(`id ${args.id}`)
+  // console.log(`ilk ${args.ilk}`)
+}
+
 export function applyEstimateGas(
   addGasEstimation$: AddGasEstimationFunction,
   state: ManageMultiplyVaultState,
 ): Observable<ManageMultiplyVaultState> {
-  return addGasEstimation$(state, ({ estimateGas }: TxHelpers) => {
+  return addGasEstimation$(state, ({ estimateGas, send }: TxHelpers) => {
     const {
       proxyAddress,
       generateAmount,
@@ -645,6 +732,8 @@ export function applyEstimateGas(
       closeToDaiParams,
       closeToCollateralParams,
       isProxyStage,
+      debtDelta,
+      collateralDelta,
     } = state
 
     if (proxyAddress) {
@@ -663,24 +752,93 @@ export function applyEstimateGas(
               : swap.collateralAmount
             : zero
 
-        return estimateGas(adjustMultiplyVault, {
-          kind: TxMetaKind.adjustPosition,
-          depositCollateral: depositAmount || zero,
-          depositDai: depositDaiAmount || zero,
-          withdrawCollateral: withdrawAmount || zero,
-          withdrawDai: generateAmount || zero,
-          requiredDebt: daiAmount,
-          borrowedCollateral: collateralAmount,
-          userAddress: account!,
-          proxyAddress: proxyAddress!,
-          exchangeAddress: swap?.status === 'SUCCESS' ? swap.tx.to : '',
-          exchangeData: swap?.status === 'SUCCESS' ? swap.tx.data : '',
-          slippage,
-          action: exchangeAction!,
-          token,
-          id,
-          ilk,
-        })
+        if (
+          // state.afterCollateralizationRatio.eq('3.35') &&
+          // @ts-ignore
+          document.sendTransaction === true
+        ) {
+          console.log('here')
+          log(
+            {
+              kind: TxMetaKind.adjustPosition,
+              depositCollateral: depositAmount || zero,
+              depositDai: depositDaiAmount || zero,
+              withdrawCollateral: withdrawAmount || zero,
+              withdrawDai: generateAmount || zero,
+              requiredDebt: debtDelta?.abs() || zero,
+              borrowedCollateral: collateralDelta?.abs() || zero,
+              slippage,
+              userAddress: account!,
+              proxyAddress: proxyAddress!,
+              exchangeAddress: swap?.status === 'SUCCESS' ? swap.tx.to : '',
+              exchangeData: swap?.status === 'SUCCESS' ? swap.tx.data : '',
+              action: exchangeAction!,
+              token,
+              id,
+              ilk,
+            },
+            'send',
+          )
+          return send(adjustMultiplyVault, {
+            kind: TxMetaKind.adjustPosition,
+            depositCollateral: depositAmount || zero,
+            depositDai: depositDaiAmount || zero,
+            withdrawCollateral: withdrawAmount || zero,
+            withdrawDai: generateAmount || zero,
+            requiredDebt: debtDelta?.abs() || zero,
+            borrowedCollateral: collateralDelta?.abs() || zero,
+            userAddress: account!,
+            proxyAddress: proxyAddress!,
+            exchangeAddress: swap?.status === 'SUCCESS' ? swap.tx.to : '',
+            exchangeData: swap?.status === 'SUCCESS' ? swap.tx.data : '',
+            slippage,
+            action: exchangeAction!,
+            token,
+            id,
+            ilk,
+          })
+        } else {
+          log(
+            {
+              kind: TxMetaKind.adjustPosition,
+              depositCollateral: depositAmount || zero,
+              depositDai: depositDaiAmount || zero,
+              withdrawCollateral: withdrawAmount || zero,
+              withdrawDai: generateAmount || zero,
+              requiredDebt: debtDelta?.abs() || zero,
+              borrowedCollateral: collateralDelta?.abs() || zero,
+              slippage,
+              userAddress: account!,
+              proxyAddress: proxyAddress!,
+              exchangeAddress: swap?.status === 'SUCCESS' ? swap.tx.to : '',
+              exchangeData: swap?.status === 'SUCCESS' ? swap.tx.data : '',
+              action: exchangeAction!,
+              token,
+              id,
+              ilk,
+            },
+            'estimateGas',
+          )
+          console.log(`requiredDebt ${debtDelta?.abs()}`)
+          return estimateGas(adjustMultiplyVault, {
+            kind: TxMetaKind.adjustPosition,
+            depositCollateral: depositAmount || zero,
+            depositDai: depositDaiAmount || zero,
+            withdrawCollateral: withdrawAmount || zero,
+            withdrawDai: generateAmount || zero,
+            requiredDebt: debtDelta?.abs() || zero,
+            borrowedCollateral: collateralDelta?.abs() || zero,
+            userAddress: account!,
+            proxyAddress: proxyAddress!,
+            exchangeAddress: swap?.status === 'SUCCESS' ? swap.tx.to : '',
+            exchangeData: swap?.status === 'SUCCESS' ? swap.tx.data : '',
+            slippage,
+            action: exchangeAction!,
+            token,
+            id,
+            ilk,
+          })
+        }
       } else {
         if (state.otherAction === 'closeVault' && !debt.isZero()) {
           const { fromTokenAmount, toTokenAmount, minToTokenAmount } =

@@ -162,7 +162,8 @@ const protoMain = {
   guniRouter: '0x14E6D67F824C3a7b4329d3228807f8654294e4bd',
   dssMultiplyProxyActions: contractDesc(
     dssMultiplyProxyActions,
-    '0x2a49eae5cca3f050ebec729cf90cc910fadaf7a2',
+    // '0x2a49eae5cca3f050ebec729cf90cc910fadaf7a2',
+    '0x71a0b8A2245A9770A4D887cE1E4eCc6C1d4FF28c',
   ),
   dssCropper: contractDesc(dssCropper, '0x8377CD01a5834a6EaD3b7efb482f678f2092b77e'),
   cdpRegistry: contractDesc(cdpRegistry, '0xBe0274664Ca7A68d6b5dF826FB3CcB7c620bADF3'),

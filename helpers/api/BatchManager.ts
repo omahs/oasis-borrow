@@ -11,9 +11,9 @@ export interface Request {
 }
 
 interface Cache {
-  getStats: () => void
-  get: (hash: string) => unknown
-  set: (hash: string, entry: unknown) => void
+  getStats: () => Promise<string>
+  get: (hash: string) => Promise<string | null>
+  set: (hash: string, entry: string) => void
 }
 
 interface Options {
@@ -49,18 +49,16 @@ export class BatchManager {
 
   async batchCall(batchCallData: Array<Request>) {
     // 1. Extract cache hits
+    const promises = batchCallData.map((callData) => this._cache.get(this._createHash(callData)))
     const batchResults: Array<{
       requestIdx: number
       data: unknown
       callData: Request
       fromCache: boolean
-    }> = batchCallData.map((callData, index) => {
-      const hash = this._createHash(callData)
-      const cachedResult = this._cache.get(hash)
-
+    }> = (await Promise.all(promises)).map((cachedResult, index) => {
       return {
         data: cachedResult,
-        callData,
+        callData: batchCallData[index],
         fromCache: !!cachedResult,
         requestIdx: index,
       }
@@ -93,7 +91,7 @@ export class BatchManager {
     }
 
     // 4. Print stats (Debug mode only)
-    this._debug && console.log(this._cache.getStats())
+    this._debug && this._cache.getStats().then(console.log)
 
     // 5. Integrate responses into batchResults
     return batchResults.map((result) => {

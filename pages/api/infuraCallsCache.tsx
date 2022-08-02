@@ -2,6 +2,7 @@ import { withSentry } from '@sentry/nextjs'
 import { BatchManager } from 'helpers/api/BatchManager'
 import { NextApiRequest, NextApiResponse } from 'next'
 import NodeCache from 'node-cache'
+import Redis from 'ioredis'
 
 import { networksById } from '../../blockchain/config'
 import { Request } from '../../helpers/api/BatchManager'
@@ -21,7 +22,21 @@ function respond(
   }
 }
 
-const cache = new NodeCache({ stdTTL: 60 })
+// const cache = new NodeCache({ stdTTL: 60 })
+
+const redis = new Redis()
+
+const cache = {
+  getStats() {
+    return redis.info('keyspace')
+  },
+  get(hash: string) {
+    return redis.get(hash)
+  },
+  set(hash: string, entry: string) {
+    redis.set(hash, entry, 'EX', 10)
+  },
+}
 
 async function infuraCallsCacheHandler(req: NextApiRequest, res: NextApiResponse) {
   const encodedBatchCallData = req.body.encoded

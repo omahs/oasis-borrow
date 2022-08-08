@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { theme } from 'theme'
 import { Box, Grid } from 'theme-ui'
 import { useOnMobile } from 'theme/useBreakpointIndex'
+import { Toggle } from 'ui'
 
 import { NotificationsCenterContent } from './NotificationsCenterContent'
 import { NotificationsCenterHeader } from './NotificationsCenterHeader'
@@ -73,6 +74,9 @@ export function NotificationsCenter({ isOpen }: { isOpen: boolean }) {
           </Grid>
         </NotificationsCenterContent>
       )}
+      <NotificationsCenterContent>
+        <>{showPreferencesTab ? <Toggle /> : <p>Notifications</p>}</>
+      </NotificationsCenterContent>
     </Box>
   )
 }

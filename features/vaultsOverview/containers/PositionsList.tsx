@@ -29,7 +29,7 @@ function PositionsListView({ positions }: { positions: PositionVM[] }) {
 export function PositionsList({ address }: { address: string }) {
   const { vaultsOverview$ } = useAppContext()
   const checksumAddress = getAddress(address.toLocaleLowerCase())
-  const [vaultsOverview, vaultsOverviewError] = useObservable(vaultsOverview$(checksumAddress))
+  const [vaultsOverview, vaultsOverviewError] = useObservable(vaultsOverview$(checksumAddress), 'vaultsOverview$')
 
   return (
     <WithErrorHandler error={[vaultsOverviewError]}>

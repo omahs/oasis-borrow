@@ -1,6 +1,8 @@
 import { deepCopy } from '@ethersproject/properties'
 import { fetchJson } from '@ethersproject/web'
 import { providers } from 'ethers'
+import { combineLatest, interval, of, Subject, timer } from 'rxjs'
+import { map, mapTo, scan, takeWhile, switchMap, bufferCount } from 'rxjs/operators'
 
 // Experimental
 type PendingBatch = Array<{
@@ -9,11 +11,23 @@ type PendingBatch = Array<{
   reject: (error: Error) => void
 }>
 
+const obs = new Subject()
+// obs.subscribe((v) => console.log(v))
+const thing = obs.pipe(
+  switchMap((value) => {
+    // return of(value)
+    return timer( 1000).pipe(mapTo('send - nothing for 1 second'))
+  }),
+)
+thing.subscribe((v) => console.log(v))
+
 export class JsonRpcBatchProvider extends providers.JsonRpcProvider {
   _pendingBatchAggregator: NodeJS.Timer | null = null
   _pendingBatch: PendingBatch | null = null
 
   send(method: string, params: Array<any>): Promise<any> {
+    obs.next(1)
+    console.log('send')
     const request = {
       method: method,
       params: params,

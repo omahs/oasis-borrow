@@ -100,6 +100,7 @@ export function createIlkDataList$(
   return ilks$.pipe(
     switchMap((ilks) => combineLatest(ilks.map((ilk) => ilkData$(ilk)))),
     distinctUntilChanged(),
+    // this retry is interesting
     retry(3),
     shareReplay(1),
   )

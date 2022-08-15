@@ -16,14 +16,14 @@ export function VaultsOverviewView({ address }: Props) {
     <Grid sx={{ flex: 1, zIndex: 1, gap: '39px' }}>
       <VaultOwnershipNotice address={address} />
       <Flex sx={{ mt: 5, flexDirection: 'column' }}>
-        <AssetsAndPositionsOverview address={address} />
+        {/*<AssetsAndPositionsOverview address={address} />*/}
 
-        <ConnectWalletPrompt address={address} />
+        {/*<ConnectWalletPrompt address={address} />*/}
       </Flex>
 
       <PositionsList address={address} />
 
-      <VaultSuggestions address={address} />
+      {/*<VaultSuggestions address={address} />*/}
     </Grid>
   )
 }

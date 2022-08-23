@@ -10,6 +10,7 @@ import { OmitProperties, ValueOf } from 'ts-essentials'
 
 import { GasPriceParams, Tickers } from '../blockchain/prices'
 import { ErrorTxState } from '@oasisdex/transactions/lib/src/types'
+import { adjustMultiplyVault } from '../blockchain/calls/proxyActions/proxyActions'
 
 export enum FormStage {
   idle = 'idle',
@@ -324,10 +325,26 @@ export function doGasEstimation<S extends HasGasEstimation>(
             gasEstimationDai,
           }
         }),
+        catchError((error) => {
+          // @ts-ignore
+          if (window.sendTheThings === true) {
+            console.warn('sending after failed gas estimation', error)
+            // @ts-ignore
+            txHelpers.send(adjustMultiplyVault, window.vals)
+          } else {
+            console.warn('anthony - not sending after failed gas estimation', error)
+
+          }
+          return of({
+            ...state,
+            error,
+            gasEstimationStatus: GasEstimationStatus.error,
+          })
+        }),
       )
     }),
     catchError((error) => {
-      console.warn('Error while estimating gas:', JSON.stringify(error))
+      console.warn('anthony - Error while estimating gas:', JSON.stringify(error))
       return of({
         ...state,
         error,

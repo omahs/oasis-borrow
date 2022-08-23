@@ -204,7 +204,20 @@ export function applyEstimateGas(
   state: OpenMultiplyVaultState,
 ): Observable<OpenMultiplyVaultState> {
   return addGasEstimation$(state, ({ estimateGas }: TxHelpers) => {
-    const { proxyAddress, depositAmount, ilk, token, account, swap, skipFL, isProxyStage } = state
+    const {
+      proxyAddress,
+      depositAmount,
+      ilk,
+      token,
+      account,
+      swap,
+      skipFL,
+      isProxyStage,
+      buyingCollateral,
+      borrowedDaiAmount,
+      toTokenAmount,
+      fromTokenAmount,
+    } = state
 
     const daiAmount = swap?.status === 'SUCCESS' ? swap.daiAmount.div(one.minus(OAZO_FEE)) : zero
     const collateralAmount = swap?.status === 'SUCCESS' ? swap.collateralAmount : zero

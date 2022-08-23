@@ -215,6 +215,7 @@ export const reclaim: TransactionDef<ReclaimData> = {
 }
 
 export type MultiplyAdjustData = {
+  anthony: 'sendWithGasEstimation' | 'estimateGas',
   kind: TxMetaKind.adjustPosition
   token: string
   requiredDebt: BigNumber
@@ -360,12 +361,36 @@ function getMultiplyAdjustCallData(data: MultiplyAdjustData, context: ContextCon
   }
 }
 
+export function log(data: MultiplyAdjustData) {
+  const d = {
+    data: data.anthony,
+    kind: data.kind,
+    depositCollateral: data.depositCollateral.toString(),
+    depositDai: data.depositDai.toString(),
+    withdrawCollateral: data.withdrawCollateral.toString(),
+    withdrawDai: data.withdrawDai.toString(),
+    requiredDebt: data.requiredDebt.toString(),
+    borrowedCollateral: data.borrowedCollateral.toString(),
+    userAddress: data.userAddress.toString(),
+    proxyAddress: data.proxyAddress.toString(),
+    exchangeAddress: data.exchangeAddress.toString(),
+    exchangeData: data.exchangeData.toString(),
+    slippage: data.slippage.toString(),
+    action: data.action.toString(),
+    token: data.token,
+    id: data.id.toString(),
+    ilk: data.ilk.toString(),
+  }
+  console.table(d)
+}
+
 export const adjustMultiplyVault: TransactionDef<MultiplyAdjustData> = {
   call: ({ proxyAddress }, { contract }) => {
     return contract<DsProxy>(contractDesc(dsProxy, proxyAddress)).methods['execute(address,bytes)']
   },
   prepareArgs: (data, context) => {
     const { dssMultiplyProxyActions } = context
+    log(data)
     return [dssMultiplyProxyActions.address, getMultiplyAdjustCallData(data, context).encodeABI()]
   },
   options: ({ token, depositCollateral }) =>

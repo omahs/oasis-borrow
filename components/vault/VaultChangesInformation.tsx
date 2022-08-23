@@ -7,6 +7,7 @@ import { formatAmount } from 'helpers/formatters/format'
 import { WithChildren } from 'helpers/types'
 import { useTranslation } from 'next-i18next'
 import React, { ReactNode, useCallback, useMemo } from 'react'
+import { BigNumber } from 'bignumber.js'
 
 export function VaultChangesInformationItem({
   label,
@@ -102,6 +103,18 @@ export function EstimationError({ withBrackets }: { withBrackets: boolean }) {
 }
 
 export function getEstimatedGasFeeTextOld(gasEstimation?: HasGasEstimation, withBrackets = false) {
+
+  // const ge = {
+  //   gasEstimationUsd: gasEstimation?.gasEstimationUsd?.toString(),
+  //   gasEstimationEth: gasEstimation?.gasEstimationEth?.toString(),
+  //   gasEstimationDai: gasEstimation?.gasEstimationDai?.toString(),
+  //   gasEstimationStatus: gasEstimation?.gasEstimationStatus,
+  //   error: gasEstimation?.error,
+  //   gasEstimation: gasEstimation?.gasEstimation?.toString(),
+  // }
+  // console.table(ge)
+  // ge.error && console.error(ge.error)
+
   if (!gasEstimation) {
     return <EstimationError withBrackets={withBrackets} />
   }

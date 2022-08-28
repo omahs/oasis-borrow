@@ -33,7 +33,7 @@ import { NotificationsIconButton } from './notifications/NotificationsIconButton
 import { useSharedUI } from './SharedUIProvider'
 import { UniswapWidgetShowHide } from './uniswapWidget/UniswapWidget'
 
-function Logo({ sx }: { sx?: SxStyleProp }) {
+export function Logo({ sx }: { sx?: SxStyleProp }) {
   return (
     <AppLink
       withAccountPrefix={false}

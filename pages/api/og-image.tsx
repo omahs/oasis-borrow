@@ -6,8 +6,8 @@ import { ThemeProvider } from 'theme-ui'
 
 import { OgImage } from '../../components/OgImage'
 interface QueryParams {
-  stage: string
-  name: string
+  people: string
+  amount: string
 }
 
 const FTPolarFontBold = staticFilesRuntimeUrl('/static/fonts/FTPolar/FTPolarTrial-Bold')
@@ -70,12 +70,12 @@ export default withOGImage<'query', QueryParams>({
     inspectHtml: false,
   },
   template: {
-    react: ({ name }) => {
+    react: ({ people, amount }) => {
       return (
         <ThemeProvider theme={theme}>
           <Global styles={globalStyles} />
           <html>
-            <OgImage name={name} />
+            <OgImage people={people} amount={amount} />
           </html>
         </ThemeProvider>
       )

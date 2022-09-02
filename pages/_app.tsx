@@ -43,7 +43,7 @@ function getLibrary(provider: any, connector: AbstractConnector | undefined): We
 const FTPolarFontBold = staticFilesRuntimeUrl('/static/fonts/FTPolar/FTPolarTrial-Bold')
 const FTPolarFontMedium = staticFilesRuntimeUrl('/static/fonts/FTPolar/FTPolarTrial-Medium')
 
-const globalStyles = `
+export const globalStyles = `
   html,
   body,
   div#__next {

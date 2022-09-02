@@ -297,10 +297,10 @@ export function OgImage({ people, amount }: Props) {
               variant="boldParagraph1"
               sx={{
                 fontWeight: 'semiBold',
-                fontSize: 6,
+                fontSize: 8,
                 color: 'neutral80',
                 lineHeight: 'loose',
-                mt: 150,
+                mt: 50,
               }}
             >
               <span style={{ color: '#25273D' }}> I've referred:</span> {people} people
@@ -309,7 +309,7 @@ export function OgImage({ people, amount }: Props) {
               variant="boldParagraph1"
               sx={{
                 fontWeight: 'semiBold',
-                fontSize: 6,
+                fontSize: 8,
                 color: 'neutral80',
                 lineHeight: 'loose',
               }}
@@ -320,13 +320,24 @@ export function OgImage({ people, amount }: Props) {
               variant="boldParagraph1"
               sx={{
                 fontWeight: 'semiBold',
-                fontSize: 6,
+                fontSize: 8,
                 color: 'neutral80',
                 lineHeight: 'loose',
               }}
             >
-              <span style={{ color: '#25273D' }}>use my referral link and earn with me,</span> or
-              whatever.
+              <span style={{ color: '#25273D' }}>use my referral link and earn with me</span>
+            </Text>
+
+            <Text
+              variant="boldParagraph1"
+              sx={{
+                fontWeight: 'semiBold',
+                fontSize: 8,
+                color: 'neutral80',
+                lineHeight: 'loose',
+              }}
+            >
+              or whatever.
             </Text>
           </Box>
         </html>

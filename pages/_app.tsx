@@ -5,6 +5,7 @@ import { AbstractConnector } from '@web3-react/abstract-connector'
 import { Web3ReactProvider } from '@web3-react/core'
 import { readOnlyEnhanceProvider } from 'blockchain/readOnlyEnhancedProviderProxy'
 import { SetupWeb3Context } from 'blockchain/web3Context'
+import { AppConfigContextProvider } from 'components/AppConfigProvider'
 import { AppContextProvider } from 'components/AppContextProvider'
 import { CookieBanner } from 'components/CookieBanner'
 import { GasEstimationContextProvider } from 'components/GasEstimationContextProvider'
@@ -16,6 +17,7 @@ import { SharedUIProvider } from 'components/SharedUIProvider'
 import { cache } from 'emotion'
 import { ModalProvider } from 'helpers/modalHook'
 import { staticFilesRuntimeUrl } from 'helpers/staticPaths'
+import { loadFeatureToggles } from 'helpers/useFeatureToggle'
 import { appWithTranslation } from 'next-i18next'
 import { AppProps } from 'next/app'
 import Head from 'next/head'
@@ -30,7 +32,6 @@ import { adRollPixelScript } from '../analytics/adroll'
 import { trackingEvents } from '../analytics/analytics'
 import { LOCALSTORAGE_KEY } from '../analytics/common'
 import { mixpanelInit } from '../analytics/mixpanel'
-import { loadFeatureToggles } from '../helpers/useFeatureToggle'
 import { useLocalStorage } from '../helpers/useLocalStorage'
 import nextI18NextConfig from '../next-i18next.config.js'
 
@@ -166,22 +167,24 @@ function App({ Component, pageProps }: AppProps & CustomAppProps) {
             <Global styles={globalStyles} />
             <Web3ReactProvider {...{ getLibrary }}>
               <AppContextProvider>
-                <ModalProvider>
-                  <HeadTags />
-                  {seoTags}
-                  <SetupWeb3Context>
-                    <SharedUIProvider>
-                      <GasEstimationContextProvider>
-                        <NotificationSocketProvider>
-                          <Layout {...layoutProps}>
-                            <Component {...pageProps} />
-                            <CookieBanner setValue={setValue} value={value} />
-                          </Layout>
-                        </NotificationSocketProvider>
-                      </GasEstimationContextProvider>
-                    </SharedUIProvider>
-                  </SetupWeb3Context>
-                </ModalProvider>
+                <AppConfigContextProvider>
+                  <ModalProvider>
+                    <HeadTags />
+                    {seoTags}
+                    <SetupWeb3Context>
+                      <SharedUIProvider>
+                        <GasEstimationContextProvider>
+                          <NotificationSocketProvider>
+                            <Layout {...layoutProps}>
+                              <Component {...pageProps} />
+                              <CookieBanner setValue={setValue} value={value} />
+                            </Layout>
+                          </NotificationSocketProvider>
+                        </GasEstimationContextProvider>
+                      </SharedUIProvider>
+                    </SetupWeb3Context>
+                  </ModalProvider>
+                </AppConfigContextProvider>
               </AppContextProvider>
             </Web3ReactProvider>
           </MDXProvider>

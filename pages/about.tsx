@@ -1,4 +1,5 @@
 import { Icon } from '@makerdao/dai-ui-icons'
+import { useAppConfigContext } from 'components/AppConfigProvider'
 import { PageSEOTags } from 'components/HeadTags'
 import { MarketingLayout } from 'components/Layouts'
 import { AppLink } from 'components/Links'
@@ -11,7 +12,10 @@ import React from 'react'
 import { Box, Grid, Heading, Image, Text } from 'theme-ui'
 
 function AboutPage({ members }: { members: TeamMember[] }) {
-  const { t } = useTranslation()
+  const {
+    i18n: { language },
+  } = useTranslation()
+  const { translations } = useAppConfigContext()
 
   return (
     <Box sx={{ width: '100%', pb: 6 }}>
@@ -23,10 +27,10 @@ function AboutPage({ members }: { members: TeamMember[] }) {
             mb: 4,
           }}
         >
-          {t('about.heading')}
+          {translations[language]['about.heading']}
         </Heading>
         <Text variant="paragraph2" sx={{ color: 'neutral80' }}>
-          {t('about.description')}
+          {translations[language]['about.description']}
         </Text>
       </Box>
       <AppLink
@@ -34,12 +38,12 @@ function AboutPage({ members }: { members: TeamMember[] }) {
         sx={{ color: 'primary100', display: 'flex', alignItems: 'center', mt: 3 }}
       >
         <Text variant="paragraph1" sx={{ color: 'primary100', fontWeight: 'semiBold' }}>
-          {t('about.careers-link')}
+          {translations[language]['about.careers-link']}
         </Text>
         <Icon name="arrow_right" size="16px" sx={{ ml: 1 }} />
       </AppLink>
       <Box sx={{ mt: 4 }}>
-        <Heading variant="header2">{t('about.pics-title')}</Heading>
+        <Heading variant="header2">{translations[language]['about.pics-title']}</Heading>
         <PortraitsGrid members={members} />
       </Box>
     </Box>

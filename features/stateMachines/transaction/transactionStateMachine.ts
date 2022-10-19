@@ -124,6 +124,7 @@ export function startTransactionService<T extends TxMeta>(
               type: 'WAITING_FOR_APPROVAL',
             },
             (txState) => {
+              console.log(`TXNMACHINE in progress`)
               return of({
                 type: 'IN_PROGRESS',
                 txHash: (txState as any).txHash as string,
@@ -140,6 +141,7 @@ export function startTransactionService<T extends TxMeta>(
               })
             },
             (txState) => {
+              console.log(`TXNMACHINE success`)
               return of({
                 type: 'CONFIRMED',
                 confirmations: (txState as any).confirmations,

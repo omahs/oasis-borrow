@@ -225,6 +225,11 @@ export function transactionToX<X, Y extends TxMeta>(
   return (txState$: Observable<TxState<Y>>) =>
     txState$.pipe(
       takeWhileInclusive((txState: TxState<Y>) => {
+        console.log(
+          `takeWhileInclusive txState.confirmations ${
+            txState.status === TxStatus.Success && txState.confirmations
+          }. confirmations: ${confirmations}`,
+        )
         return (
           (txState.status === TxStatus.Success && txState.confirmations < confirmations) ||
           txState.status !== TxStatus.Success
@@ -249,11 +254,20 @@ export function transactionToX<X, Y extends TxMeta>(
               return isFunction(fiascoX) ? fiascoX(txState) : of(fiascoX)
             case TxStatus.Propagating:
             case TxStatus.WaitingForConfirmation:
+              // @ts-ignore
+              console.log(`Waiting for confirmation ${txState.confirmations}/${confirmations}`)
               return isFunction(waitingForConfirmationX)
                 ? waitingForConfirmationX(txState)
                 : of(waitingForConfirmationX)
             case TxStatus.Success:
-              return successHandler ? successHandler(txState) : of()
+              console.log(
+                `TxStatus.Success txState.confirmations ${
+                  txState.status === TxStatus.Success && txState.confirmations
+                }. confirmations: ${confirmations}`,
+              )
+              return successHandler && txState.confirmations >= confirmations
+                ? successHandler(txState)
+                : of()
             default:
               return of()
           }
